@@ -121,6 +121,7 @@ export function SettingsPanel({ open: isOpen, outputPath, onOutputPath, onClose 
               </button>
             </section>
 
+
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button className="btn-accent" onClick={onClose}>{t.close}</button>
             </div>

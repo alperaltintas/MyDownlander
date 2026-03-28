@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { UrlInput } from "./components/UrlInput";
 import { DownloadQueue } from "./components/DownloadQueue";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -24,6 +25,18 @@ export default function App() {
   const t = useT();
 
   useDownloadEvents();
+
+  useEffect(() => {
+    const INTERACTIVE = "button, input, select, textarea, a, [role='button']";
+    const onMouseDown = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(INTERACTIVE)) {
+        e.preventDefault();
+        getCurrentWindow().startDragging();
+      }
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
 
   const handleDownload = async (url: string, format: string) => {
     const id = crypto.randomUUID();
@@ -62,12 +75,13 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "0 0 24px" }}>
+    <div
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "0 0 24px" }}
+    >
       <div
-        data-tauri-drag-region
-        style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 16, gap: 8, WebkitAppRegion: "drag" } as React.CSSProperties}
+        style={{ height: 48, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 16, paddingLeft: 80, gap: 8 }}
       >
-        <div style={{ WebkitAppRegion: "no-drag", display: "flex", gap: 6 } as React.CSSProperties}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => setAuthOpen(true)}>{t.cookiesBtn}</button>
           <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => setSettingsOpen(true)}>{t.settingsBtn}</button>
           <ThemeToggle />
