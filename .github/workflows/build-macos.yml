@@ -1,0 +1,41 @@
+name: Build macOS
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Download yt-dlp binaries
+        run: |
+          mkdir -p src-tauri/binaries
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos \
+            -o src-tauri/binaries/yt-dlp-aarch64-apple-darwin
+          cp src-tauri/binaries/yt-dlp-aarch64-apple-darwin \
+            src-tauri/binaries/yt-dlp-x86_64-apple-darwin
+          chmod +x src-tauri/binaries/yt-dlp-*
+
+      - name: Build (arm64)
+        run: npm run tauri build -- --target aarch64-apple-darwin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mydownloader-macos-arm64
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
